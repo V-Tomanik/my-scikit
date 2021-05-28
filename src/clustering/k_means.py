@@ -1,6 +1,7 @@
 import numpy as np
 from src.utils.utils_vector import distance_matrix,minkowski_distance
-
+import matplotlib.pyplot as plt
+import pandas as pd
 
 class elkan_functions():
 
@@ -57,8 +58,17 @@ class elkan_functions():
 
 
     @staticmethod
-    def update_centers(X,center,bounds) -> np.ndarray:
-        return center
+    def update_centers(X:np.ndarray,centers:np.ndarray,bounds:list):
+
+        dict_centers = {k:[] for k in range(centers.shape[0])}
+        last_bound = bounds[-1]
+        for point in last_bound:
+            dict_centers[point[1]].append(point[0])
+        for center in range(centers.shape[0]):
+            if dict_centers[center] != []:
+                points_of_array = np.take(X,dict_centers[center],axis=0)
+                new_center = np.mean(points_of_array,axis=0)
+                centers[center] = new_center
 
 class k_means():
     """
@@ -91,17 +101,28 @@ class k_means():
 
 
     def elkan_kmeans_iter(self,points,centers):
-        #todo:calcular distancia entre centros
-
+        hist_bounds =[]
         #loop para cada ponto
             #todo: difinir ponto-centro
             #todo: verificar se distance ponto-centro é menor que 2x a distancia entre os outros centros
+        print(f'centros:{centers}')
+        df = pd.DataFrame(centers)
+        df2 = pd.DataFrame(points)
+        graph = df.plot.scatter(x=0,y=1,color='red')
+        df2.plot.scatter(x=0,y=1,color='DarkBlue',ax=graph)
+        plt.show()
 
         #todo:mudar os centros vendo o centro de massa
         d_matrix = distance_matrix(centers,centers)/2
-        x = elkan_functions.init_bounds_elkan(points,centers,d_matrix)
-        print(x)
-
+        init_bounds  = elkan_functions.init_bounds_elkan(points,centers,d_matrix)
+        hist_bounds.append(init_bounds)
+        elkan_functions.update_centers(points,centers,hist_bounds) 
+        print(f'centros:{centers}')
+        df = pd.DataFrame(centers)
+        df2 = pd.DataFrame(points)
+        graph = df.plot.scatter(x=0,y=1,color='red')
+        df2.plot.scatter(x=0,y=1,color='DarkBlue',ax=graph)
+        plt.show()
 
     def fit(self,X) -> None:
 
@@ -114,7 +135,7 @@ class k_means():
 
 if __name__ == '__main__':
     x = k_means(5)
-    dados = np.random.uniform(0,100,(3,2))
+    dados = np.random.uniform(0,100,(50,2))
     print(f'dados {dados}')
     x.fit(dados)
 

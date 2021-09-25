@@ -1,12 +1,18 @@
 import numpy as np
 from src.utils.utils_vector import distance_matrix,minkowski_distance
-import matplotlib.pyplot as plt
+from  matplotlib import pyplot as plt
 import pandas as pd
 
 class elkan_functions():
-
+    """
+    Classe abriga as funções especificar para o Kmeans de Elkan
+    """
     @staticmethod
     def init_bounds_elkan(X:np.ndarray,centers:np.ndarray,centers_half_distance:np.ndarray) -> list:
+        """
+        Funções retorna o uma lista de array's com os index do  ponto, o index do  melhor cluster e a distancia
+        Inicializa o historico
+        """
         bounds = []
         number_samples = X.shape[0]
         n_cluster = centers.shape[0]
@@ -21,21 +27,42 @@ class elkan_functions():
                 if min_dist > centers_half_distance[melhor_cluster][j]:  #Lemma1 elkan
                     #caso realmente haja a necessidade, calculamos os valores da distancia 
                     dist = minkowski_distance(X[i],centers[j])
-                    if min_dist > dist:
+                    if min_dist > dist: #type: ignore
                         min_dist = dist
                         melhor_cluster = j
             bounds.append((i,melhor_cluster,min_dist))
         return bounds
 
+    @staticmethod
+    def init_iter(points:np.ndarray,centers:np.ndarray):
+
+        hist_bounds =[]
+        # Cria uma matriz da distancia entre os centros
+        d_matrix = distance_matrix(centers,centers)/2  # type: ignore
+        init_bounds  = elkan_functions.init_bounds_elkan(points,centers,d_matrix)
+        hist_bounds.append(init_bounds)
+        elkan_functions.update_centers(points,centers,hist_bounds) 
+        
+        return points,centers,hist_bounds,d_matrix
+
 
     @staticmethod
     def iter_elkan(X:np.ndarray,centers:np.ndarray,bounds:list,centers_half_distance:np.ndarray) -> list:
+        """
+        Função para a iteração do Kmeans de elkan, retorna para cada ponto i o centro futuro e a distancia entre os dois
+        x: matrix de pontos
+        centers: matrix dos centros
+        bounds: historico de cada ponto
+        centers_half_distance: matriz com a distancia entre os centros
+        """
         last_iter = bounds[-1]
         number_samples = X.shape[0]
         n_cluster = centers.shape[0]
 
+        #Para cada ponto
         for i in range(number_samples):
             current_cluster = last_iter[i][1]
+            #Distancia do ponto ao centro atualmente
             current_distance = last_iter[i][2]
             future_cluster = None
             future_distance = None 
@@ -48,7 +75,7 @@ class elkan_functions():
                         future_distance = dist
                         future_cluster = j
                     else:
-                        raise ValueError("current_distance <= dist")
+                        raise ValueError("current_distance <= distancia do centro. Problema com a matriz dist entre centros")
                 else:
                     future_cluster = current_cluster
                     future_distance = current_distance
@@ -59,12 +86,18 @@ class elkan_functions():
 
     @staticmethod
     def update_centers(X:np.ndarray,centers:np.ndarray,bounds:list):
-
+        """
+        Faz um update nos centros dos clusters
+        bound: Lista com o historio dos pontos [(n_ponto,n_cluster,distancia),....]
+        """
+        #cria um dicionario dos centros com os pontos dentro
         dict_centers = {k:[] for k in range(centers.shape[0])}
         last_bound = bounds[-1]
         for point in last_bound:
+            #Cria uma lista atualiza dos centros com seus pontos
             dict_centers[point[1]].append(point[0])
         for center in range(centers.shape[0]):
+            #Se o centro tiver algum ponto vamos altera-lo
             if dict_centers[center] != []:
                 points_of_array = np.take(X,dict_centers[center],axis=0)
                 new_center = np.mean(points_of_array,axis=0)
@@ -94,13 +127,22 @@ class k_means():
         self.centroids = None
 
     def _init_centroids(self,n_clusters,dimension,x_min,x_max):
+        """
+        Função de criação dos centroids, cria aleatoriamente os centroids dentro das x_max e x_min
+        n_cluster: Número de clusters a serem criados
+        dimension: Dimensão do espaço 
+        x_min: Minimo valor no eixo
+        x_max: Maximo valor no eixo
+        """
         list_centroids= []
         for _ in range(n_clusters):
-            list_centroids.append(np.random.uniform(x_min,x_max,dimension))
+            list_centroids.append(np.random.uniform(x_min,x_max,dimension)) # type: ignore
         return np.stack(list_centroids,axis=0)
 
-
-    def elkan_kmeans_iter(self,points,centers):
+    def elkan_kmeans_iter(self,points:np.ndarray,centers:np.ndarray,iterations):
+        """
+        Função de iteração do Kmeans
+        """
         hist_bounds =[]
         #loop para cada ponto
             #todo: difinir ponto-centro
@@ -112,17 +154,25 @@ class k_means():
         df2.plot.scatter(x=0,y=1,color='DarkBlue',ax=graph)
         plt.show()
 
-        #todo:mudar os centros vendo o centro de massa
-        d_matrix = distance_matrix(centers,centers)/2
-        init_bounds  = elkan_functions.init_bounds_elkan(points,centers,d_matrix)
-        hist_bounds.append(init_bounds)
-        elkan_functions.update_centers(points,centers,hist_bounds) 
-        print(f'centros:{centers}')
-        df = pd.DataFrame(centers)
+        #todo:mudar os centros vendo o centro de massa        df = pd.DataFrame(centers)
+        points,center,hist_bounds,d_distance = elkan_functions.init_iter(points=points,centers=centers)
+
         df2 = pd.DataFrame(points)
         graph = df.plot.scatter(x=0,y=1,color='red')
         df2.plot.scatter(x=0,y=1,color='DarkBlue',ax=graph)
         plt.show()
+        
+        for _ in range(iterations):
+            bound = elkan_functions.iter_elkan(points,center,hist_bounds,d_distance)
+            hist_bounds.append(bound)
+            elkan_functions.update_centers(points,centers,hist_bounds) 
+ 
+            df2 = pd.DataFrame(points)
+            graph = df.plot.scatter(x=0,y=1,color='red')
+            df2.plot.scatter(x=0,y=1,color='DarkBlue',ax=graph)
+            plt.show()
+               
+
 
     def fit(self,X) -> None:
 
@@ -131,11 +181,12 @@ class k_means():
 
         n_dimension = X.shape[1]
         self.centroids = self._init_centroids(self.n_cluster,n_dimension,x_min,x_max)
-        self.elkan_kmeans_iter(X,self.centroids)
+        self.elkan_kmeans_iter(X,self.centroids,3)
+
 
 if __name__ == '__main__':
     x = k_means(5)
-    dados = np.random.uniform(0,100,(50,2))
+    dados = np.random.uniform(0,100,(50,2)) #type: ignore
     print(f'dados {dados}')
     x.fit(dados)
 

@@ -40,9 +40,4 @@ def distance_matrix(x:np.ndarray,y:np.ndarray) -> Union[np.ndarray,None]:
     return minkowski_distance(x[:,np.newaxis,:],y[np.newaxis,:,:])
 
 if __name__ == '__main__':
-    x = np.matrix([[1,1],[2,2],[3,3]])
-    y = distance_matrix(x,x)
-    print(x)
-    print(y)
-    print(y[0][1:])
-    print(min(y[0][1:]))
+    pass

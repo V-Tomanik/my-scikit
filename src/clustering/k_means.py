@@ -92,13 +92,18 @@ class elkan_functions():
         """
         #cria um dicionario dos centros com os pontos dentro
         dict_centers = {k:[] for k in range(centers.shape[0])}
+        print(dict_centers)
         last_bound = bounds[-1]
+        print(last_bound)
         for point in last_bound:
-            #Cria uma lista atualiza dos centros com seus pontos
+            #point=(ponto,cluster,distance)
+            #Cria uma lista dos centros com seus pontos
+            print(point)
             dict_centers[point[1]].append(point[0])
         for center in range(centers.shape[0]):
             #Se o centro tiver algum ponto vamos altera-lo
             if dict_centers[center] != []:
+                #Cria um array com pontos (que também é um array da sua posição)
                 points_of_array = np.take(X,dict_centers[center],axis=0)
                 new_center = np.mean(points_of_array,axis=0)
                 centers[center] = new_center

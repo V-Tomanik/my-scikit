@@ -89,16 +89,16 @@ class elkan_functions():
         """
         Faz um update nos centros dos clusters
         bound: Lista com o historio dos pontos [(n_ponto,n_cluster,distancia),....]
+        
+        #todo: Mudar isso
+        Warning: A tipagem fica igual ao tipo do center, podendo haver arredondamentos
         """
         #cria um dicionario dos centros com os pontos dentro
         dict_centers = {k:[] for k in range(centers.shape[0])}
-        print(dict_centers)
         last_bound = bounds[-1]
-        print(last_bound)
         for point in last_bound:
             #point=(ponto,cluster,distance)
             #Cria uma lista dos centros com seus pontos
-            print(point)
             dict_centers[point[1]].append(point[0])
         for center in range(centers.shape[0]):
             #Se o centro tiver algum ponto vamos altera-lo

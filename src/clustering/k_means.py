@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.typing as tp
 from src.utils.utils_vector import distance_matrix,minkowski_distance
 from  matplotlib import pyplot as plt
 import pandas as pd
@@ -8,7 +9,7 @@ class elkan_functions():
     Classe abriga as funções especificar para o Kmeans de Elkan
     """
     @staticmethod
-    def init_bounds_elkan(X:np.ndarray,centers:np.ndarray,centers_half_distance:np.ndarray) -> list:
+    def init_bounds_elkan(X:tp.NDArray[np.float16],centers:tp.NDArray[np.float32],centers_half_distance:tp.NDArray[np.float16]) -> list:
         """
         Funções retorna o uma lista de array's com os index do  ponto, o index do  melhor cluster e a distancia
         Inicializa o historico
@@ -35,7 +36,9 @@ class elkan_functions():
 
     @staticmethod
     def init_iter(points:np.ndarray,centers:np.ndarray):
-
+        #Convertendo para float caso n seja
+        points = points.astype(float)
+        centers = centers.astype(float)
         hist_bounds =[]
         # Cria uma matriz da distancia entre os centros
         d_matrix = distance_matrix(centers,centers)/2  # type: ignore

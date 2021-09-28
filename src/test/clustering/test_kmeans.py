@@ -28,13 +28,13 @@ class Test_elkan_functions:
                                                                         (1,0,3.0),
                                                                         (2,2,3.0)])
     def test_init_iter_um_ponto_e_dois_centros(self):
-        x = np.array([[0,0]])
-        y = np.array([[2,1],[1,1]])
+        x = np.array([[0.,0.]])
+        y = np.array([[2.,1.],[1.,1.]])
         distance = distance_matrix(y,y)/2 #type: ignore
 
         points,center,hist_bounds,d_distance = elkan_functions.init_iter(points=x,centers=y)
         assert np.all(x==points)
-        assert np.all(y==center)
+        assert np.all(center== np.array([[2.,1.],[0.,0.]]))
         assert np.all(d_distance==distance)
         assert np.all(np.round(hist_bounds,1) ==  [(0,1,1.4)])
 
@@ -44,8 +44,8 @@ class Test_elkan_functions:
         distance = distance_matrix(y,y)/2 #type: ignore
 
         points,center,hist_bounds,d_distance = elkan_functions.init_iter(points=x,centers=y)
-        assert np.all(x==points)
-        assert np.all(y==center)
+        assert np.all(points==np.array([[0.,0.],[2.,4.],[-1.,-3.]]))
+        assert np.all(center==np.array([[2.,4.],[1.,1.],[-0.5,-1.5]]))
         assert np.all(d_distance==distance)
         assert np.all(np.round(hist_bounds,1) ==    [(0,2,1.0),
                                                     (1,0,3.0),
@@ -62,7 +62,7 @@ class Test_elkan_functions:
         point = np.array([[1,0]])
         bound = [[(0,0,1)]]
         elkan_functions.update_centers(X=point,centers=center,bounds=bound)
-        assert np.all(center == point)
+        assert np.all(center == np.array([[1.,0.]]))
 
     def test_update_centers_multiplos_centros(self):
         center = np.array([[0.,0.],[2.,1.],[-10.,-5.],[0.,0.],[1.,1.]])
